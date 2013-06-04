@@ -178,6 +178,6 @@ class DefaultController extends Controller
 	
 	public function actionRefresh()
 	{
-		$this->renderPartial( '_summary', $this->getMigrations() );
+		$this->renderPartial( '_index', $this->getMigrations() );
 	}
 }

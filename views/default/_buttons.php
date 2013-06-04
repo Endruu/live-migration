@@ -22,7 +22,7 @@
 		'Refresh',
 		array('refresh'),
 		array(
-			'update'	=> '#livemigration-summary',
+			'update'	=> '#livemigration-container',
 			'async'		=> false,
 		)
 	);
