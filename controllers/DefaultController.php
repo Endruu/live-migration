@@ -104,6 +104,54 @@ class DefaultController extends Controller
 		);
 	}
 
+	protected function migrateTo( $migration )
+	{
+	
+		$latest		= $this->getLatestMigration();
+		$direction	= 'up';
+		$error		= 0;
+		$title		= '';
+
+		
+		// check integrity
+		$mgs = $this->getOldMigrations();
+		foreach( $mgs as $id => $p ) {
+			if( $migration == $id ) $direction = 'down';
+			if( $direction == 'down' && $p['status'] == 'missing' ) {
+				$mresponse	= "Error: Can't migrate down! Missing migration file(s)!";
+				$error		= 1;
+				$actual		= $latest;
+			}
+		}
+		
+		if( $migration == $latest ) {
+			$args = array('yiic', 'migrate', 'redo', '1', '--interactive=0');
+			$title = "Redoing migration: " . $migration;
+		} else {
+			$args = array('yiic', 'migrate', 'to', $migration, '--interactive=0');
+			$title = "Migrating " . $direction . "<br />from: " . $latest . " <br />to: " . $migration;
+		}
+
+		if( !$error ) {
+			ob_start();
+			$this->runner->run($args);
+			$mresponse = ob_get_clean();
+			
+			$actual = $this->getLatestMigration();
+			if( $actual != $migration ) $error = 1;
+		}
+
+		return array(
+			'mlist'		=> array_merge( $this->getOldMigrations(), $this->getNewMigrations()),
+			'latest'	=> $actual,
+			'title'		=> $title,
+			'error'		=> $error,
+			'response'	=> $mresponse
+		);
+		
+	}
+
+	
 	public function actionIndex()
 	{
 		$this->render( 'index', $this->getMigrations() );
@@ -113,15 +161,12 @@ class DefaultController extends Controller
 	public function actionMigrate()
 	{
 
-		if(isset($_POST['Post']))
+		if(isset($_POST['selected']))
 		{
-			$model->attributes=$_POST['Post'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->post_id));
+			$selected = $_POST['selected'];
+				$this->renderPartial( '_migrate', $this->migrateTo($selected) );
 		}
 
-
-		$this->render('index');
 	}
 
 	
