@@ -116,12 +116,12 @@ class DefaultController extends Controller
 		// check integrity
 		$mgs = $this->getOldMigrations();
 		foreach( $mgs as $id => $p ) {
-			if( $migration == $id ) $direction = 'down';
 			if( $direction == 'down' && $p['status'] == 'missing' ) {
 				$mresponse	= "Error: Can't migrate down! Missing migration file(s)!";
 				$error		= 1;
 				$actual		= $latest;
 			}
+			if( $migration == $id ) $direction = 'down';
 		}
 		
 		if( $migration == $latest ) {
