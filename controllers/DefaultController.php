@@ -104,6 +104,20 @@ class DefaultController extends Controller
 		);
 	}
 
+	protected function markAsLatest( $migration )
+	{
+		$args = array('yiic', 'migrate', 'mark', $migration, '--interactive=0');
+		ob_start();
+		$this->runner->run($args);
+		$mresponse = ob_get_clean();
+		
+		return array(
+			'mlist'		=> array_merge( $this->getOldMigrations(), $this->getNewMigrations()),
+			'latest'	=> $migration,
+			'response'	=> $mresponse
+		);
+		
+	}
 	protected function migrateTo( $migration )
 	{
 	
@@ -160,19 +174,21 @@ class DefaultController extends Controller
 	
 	public function actionMigrate()
 	{
-
 		if(isset($_POST['selected']))
 		{
 			$selected = $_POST['selected'];
-				$this->renderPartial( '_migrate', $this->migrateTo($selected) );
+			$this->renderPartial( '_migrate', $this->migrateTo($selected) );
 		}
-
 	}
 
 	
 	public function actionMark()
 	{
-		$this->render('index');
+		if(isset($_POST['selected']))
+		{
+			$selected = $_POST['selected'];
+			$this->renderPartial( '_mark', $this->markAsLatest($selected) );
+		}
 	}
 	
 	
