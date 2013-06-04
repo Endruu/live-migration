@@ -1,7 +1,8 @@
 <h1>LiveMigration</h1>
-<h2>Actual: <?php ?>></h2>
 
 <div id="livemigration-container">
+
+	<h2>Actual: <?php echo $latest; ?></h2>
 	
 	<div id="livemigration-summary">
 	
@@ -10,8 +11,3 @@
 	</div>
 
 </div>
-
-
-<pre id="livemigration-result">
-	<!-- outpu of migrate and mark commands -->
-</pre>

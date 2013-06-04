@@ -7,6 +7,7 @@
 			<th>Migration</th>
 			<th>Created</th>
 			<th>Applied</th>
+			<th>Status</th>
 		</tr>
 	</thead>
 	
@@ -26,6 +27,7 @@ foreach( $mlist as $migration => $m ) {
 	}
 	$tr .= "<td>" . $m["created"] . "</td>";
 	$tr .= "<td>" . $m["applied"] . "</td>";
+	$tr .= "<td>" . $m["status"] . "</td>";
 	
 	$tr .= "</tr>\n";
 	echo $tr;

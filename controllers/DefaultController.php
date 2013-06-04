@@ -3,10 +3,10 @@
 class DefaultController extends Controller
 {
 
-	protected $runner = null;
+	protected $runner	= null;
+	protected $mpath	= null;
 
-
-	protected function initCommandRunner()
+	protected function beforeAction($action)
 	{
 
 		if( $this->runner ) return;
@@ -19,7 +19,9 @@ class DefaultController extends Controller
 
 		// --- check for migrate cmd ----
 		if( array_key_exists( 'migrate', $r->commands ) ) {
-			$this->runner = $r;
+			$this->runner	= $r;
+			$this->mpath	= Yii::getPathOfAlias( $r->createCommand('migrate')->migrationPath ) . DIRECTORY_SEPARATOR;
+			return true;
 		} else {
 			throw new CException("Can't find 'migrate' command!");
 		}
@@ -28,13 +30,13 @@ class DefaultController extends Controller
 	
 	protected function getOldMigrations( $limit = null )
 	{
-		$this->initCommandRunner();
 		
 		if( $limit ) {
 			$args = array('yiic', 'migrate', 'history', $limit, '--interactive=0');
 		} else {
 			$args = array('yiic', 'migrate', 'history', '--interactive=0');
 		}
+		
 		ob_start();
 		$this->runner->run($args);
 		$mresponse = ob_get_clean();
@@ -48,18 +50,23 @@ class DefaultController extends Controller
 					'applied'	=> $m[1],
 					'created'	=> $m[3] . '-' . $m[4] . '-' . $m[5] . ' ' . $m[6] . ':' . $m[7] . ':' . $m[8],
 					'name'		=> implode( " ", explode( "_", $m[9] ) ),
+					'status'	=> 'applied'
 				);
+				if( !file_exists( $this->mpath.$m[2].'.php' ) ) $migrations[$m[2]]['status'] = 'missing';
 			}
 		}
 		
-		echo $mresponse;
+		if( array_key_exists( 'm000000_000000_base', $migrations ) ) {
+			$migrations['m000000_000000_base']['status'] = 'base';
+		}
+		
 		return array_reverse($migrations);
 	}
 	
 	
 	protected function getNewMigrations()
 	{
-		$this->initCommandRunner();
+		
 		$args = array('yiic', 'migrate', 'new', '--interactive=0');
 		ob_start();
 		$this->runner->run($args);
@@ -71,9 +78,10 @@ class DefaultController extends Controller
 		foreach( $lines as $line) {	// oldest first
 			if( preg_match("/((m)(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)_(.*))/", $line, $m) ) {
 				$migrations[$m[1]] = array(
-					'applied'	=> 'pending',
+					'applied'	=> 'n/a',
 					'created'	=> $m[3] . '-' . $m[4] . '-' . $m[5] . ' ' . $m[6] . ':' . $m[7] . ':' . $m[8],
 					'name'		=> implode( " ", explode( "_", $m[9] ) ),
+					'status'	=> 'pending'
 				);
 			}
 		}
@@ -96,7 +104,6 @@ class DefaultController extends Controller
 		);
 	}
 
-	
 	public function actionIndex()
 	{
 		$this->render( 'index', $this->getMigrations() );
